@@ -310,7 +310,7 @@ static struct PyModuleDef module = {
     methods
 };
 
-PyMODINIT_FUNC PyInit_py_utils_to_c(void)
+PyMODINIT_FUNC PyInit__core(void)
 {
     return PyModule_Create(&module);
 }
