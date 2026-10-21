@@ -9,20 +9,20 @@ if TYPE_CHECKING:
 
 def dpy_utils_snowflakelist_has(snowflake_list: SnowflakeList, target: int) -> bool:
     """
-    Similar to discord.py's discord.SnowflakeList.has
+    Similar to discord.py's discord.utils.SnowflakeList.has
     """
     pass
 
 
 def dpy_utils_snowflakelist_get(snowflake_list: SnowflakeList, target: int) -> int | None:
     """
-    Similar to discord.py's discord.SnowflakeList.get
+    Similar to discord.py's discord.utils.SnowflakeList.get
     """
     pass
 
 
 def dpy_utils_snowflakelist_add(snowflake_list: SnowflakeList, snowflake: int) -> None:
     """
-    Similar to discord.py's discord.SnowflakeList.add
+    Similar to discord.py's discord.utils.SnowflakeList.add
     """
     pass
