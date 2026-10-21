@@ -58,8 +58,6 @@ class ExampleClass:
     def __repr__(self) -> str:
         return str(self.value)
 
-    def __eq__(self, value: ExampleClass) -> bool:
-        return self.value == value
 
 def main():
     classes = [ExampleClass(i) for i in range(100)]
