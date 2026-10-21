@@ -1,10 +1,12 @@
 # py_utils_to_c
-A C extension that implements common python utility (*utils*) functions/classes. Naturally this will speed it up a lot, and speed is gud.
-> [!NOTE]
-> This project is still under development and this is ultimately a hobby project :)
+A C extension that implements common python utility (*utils*) functions/classes. Naturally this will speed it up a lot, and faster is gud am I right?
+> [!IMPORTANT]
+> This project is still under development and is ultimately a hobby project :)
+>
+> I **do not** mean for this to replace any util functions in any project and speedups are usually negligible in most workloads.
 
 ## Features
-- Extremely fast implementations (up to 10x faster on some)
+- Extremely fast implementations (up to 11x faster on some)
 - Mimics the python version (almost for now)
 
 ### Benchmarks/Speedups
