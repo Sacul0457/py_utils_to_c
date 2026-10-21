@@ -5,7 +5,18 @@ A C extension that implements common python utility (*utils*) functions/classes.
 
 ## Features
 - Extremely fast implementations (up to 10x faster on some)
-- Mimics the python version
+- Mimics the python version (almost for now)
+
+### Benchmarks/Speedups
+| Function             | Python      | C Version              |
+|----------------------|:-----------:|:----------------------:|
+| discord.utils.get    | 15.3 ms     | 2.8 ms: 5.46x faster   |
+| discord.utils.find   | 2.9 ms      | 2.9 ms: no change      |
+| SnowflakeList.get    | 6.7 ms      | 0.6 ms: 11.2x faster   |
+| SnowflakeList.has    | 6.6 ms      | 0.6 ms: 11.0x faster   |
+| SnowflakeList.add    | 9.6 ms      | 8.9 ms: 1.08x faster   |
+
+*There are initial benchmarks and overall performance I have seen over the course of creating/testing.* Will make a more reliable one and share it in the repo.
 
 ## Installing
 
