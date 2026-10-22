@@ -165,13 +165,13 @@ dpy_utils_find(PyObject *self, PyObject *args)
 }
 
 
-// SNOWLFLAKE LIST IMPLEMENTATIONS
+// Binary Search Sequence IMPLEMENTATIONS
 
 static inline Py_ssize_t
-_dpy_utils_snowflakelist_search(PyObject *snowflake_list , PyObject *target_obj, const int is_add)
+_binary_search_seq(PyObject *snowflake_list , PyObject *target_obj, const int is_add)
 {
-    const unsigned long long target = PyLong_AsUnsignedLongLong(target_obj);
-    if (target == (unsigned long long)-1 && PyErr_Occurred()) {
+    const long long target = PyLong_AsLongLong(target_obj);
+    if (target == (long long)-1 && PyErr_Occurred()) {
         return -1;
     }
 
@@ -180,9 +180,9 @@ _dpy_utils_snowflakelist_search(PyObject *snowflake_list , PyObject *target_obj,
         return -1;
     }
 
-    const uint64_t *array = (const uint64_t *)view.buf;
+    const long long *array = (const long long *)view.buf;
     Py_ssize_t low = 0;
-    Py_ssize_t high = view.len / sizeof(uint64_t);
+    Py_ssize_t high = view.len / sizeof(long long);
 
     while (low < high) {
         const Py_ssize_t mid = low + (high - low) / 2;
@@ -204,7 +204,7 @@ _dpy_utils_snowflakelist_search(PyObject *snowflake_list , PyObject *target_obj,
 
 
 static PyObject *
-dpy_utils_snowflakelist_has(PyObject *self, PyObject *args)
+binary_search_seq_has(PyObject *self, PyObject *args)
 {
     const Py_ssize_t nargs = PyTuple_Size(args);
     if (nargs != 2) {
@@ -212,17 +212,17 @@ dpy_utils_snowflakelist_has(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    PyObject *snowflake_list = PyTuple_GET_ITEM(args, 0);
-    if (snowflake_list == NULL) {
-        return NULL;
+    PyObject *sequence = PyTuple_GET_ITEM(args, 0);
+    if (!PySequence_Check(sequence)) {
+        PyErr_Format(PyExc_TypeError, "Expected a sequence, got %.200s instead.", Py_TYPE(sequence)->tp_name);
     }
 
     PyObject *target = PyTuple_GET_ITEM(args, 1);
-    if (target == NULL) {
-        return NULL;
+    if (!PyLong_Check(target)) {
+        PyErr_Format(PyExc_TypeError, "Expected an int, got %.200s instead.", Py_TYPE(target)->tp_name);
     }
     
-    if (_dpy_utils_snowflakelist_search(snowflake_list, target, 0) == -1) {
+    if (_binary_search_seq(sequence, target, 0) == -1) {
         Py_RETURN_FALSE;
     }
 
@@ -231,7 +231,7 @@ dpy_utils_snowflakelist_has(PyObject *self, PyObject *args)
 
 
 static PyObject *
-dpy_utils_snowflakelist_get(PyObject *self, PyObject *args)
+binary_search_seq_get(PyObject *self, PyObject *args)
 {
     const Py_ssize_t nargs = PyTuple_Size(args);
     if (nargs != 2) {
@@ -239,17 +239,17 @@ dpy_utils_snowflakelist_get(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    PyObject *snowflake_list = PyTuple_GET_ITEM(args, 0);
-    if (snowflake_list == NULL) {
-        return NULL;
+    PyObject *sequence = PyTuple_GET_ITEM(args, 0);
+    if (!PySequence_Check(sequence)) {
+        PyErr_Format(PyExc_TypeError, "Expected a sequence, got %.200s instead.", Py_TYPE(sequence)->tp_name);
     }
 
     PyObject *target = PyTuple_GET_ITEM(args, 1);
-    if (target == NULL) {
-        return NULL;
+    if (!PyLong_Check(target)) {
+        PyErr_Format(PyExc_TypeError, "Expected an int, got %.200s instead.", Py_TYPE(target)->tp_name);
     }
 
-    const Py_ssize_t index = _dpy_utils_snowflakelist_search(snowflake_list, target, 0);
+    const Py_ssize_t index = _binary_search_seq(sequence, target, 0);
     if (index == -1) {
         Py_RETURN_NONE;
     }
@@ -258,47 +258,12 @@ dpy_utils_snowflakelist_get(PyObject *self, PyObject *args)
 }
 
 
-static PyObject *
-dpy_utils_snowflakelist_add(PyObject *self, PyObject *args)
-{
-    const Py_ssize_t nargs = PyTuple_Size(args);
-    if (nargs != 2) {
-        PyErr_Format(PyExc_TypeError, "expected 2 arguments, got %zd instead", nargs);
-        return NULL;
-    }
-
-    PyObject *snowflake_list = PyTuple_GET_ITEM(args, 0);
-    if (snowflake_list == NULL) {
-        return NULL;
-    }
-
-    PyObject *target = PyTuple_GET_ITEM(args, 1);
-    if (target == NULL) {
-        return NULL;
-    }
-    
-    const Py_ssize_t index = _dpy_utils_snowflakelist_search(snowflake_list, target, 1);
-    if (index == -1) {
-        return NULL;
-    }
-
-    PyObject *result = PyObject_CallMethod(snowflake_list, "insert", "nO", index, target);
-    if (result == NULL) {
-        return NULL;
-    }
-
-    Py_DECREF(result);
-    return result;
-}
-
-
 static PyMethodDef methods[] = {
     {"dpy_utils_get", (PyCFunction)dpy_utils_get, METH_VARARGS | METH_KEYWORDS, "C like impl of discord.py.utils._get"},
     {"dpy_utils_find", (PyCFunction)dpy_utils_find, METH_VARARGS, "C like impl of discord.py.utils._find"},
 
-    {"dpy_utils_snowflakelist_has", (PyCFunction)dpy_utils_snowflakelist_has, METH_VARARGS, "C like impl of discord.py.utils.SnowflakeList.has"},
-    {"dpy_utils_snowflakelist_get", (PyCFunction)dpy_utils_snowflakelist_get, METH_VARARGS, "C like impl of discord.py.utils.SnowflakeList.get"},
-    {"dpy_utils_snowflakelist_add", (PyCFunction)dpy_utils_snowflakelist_add, METH_VARARGS, "C like impl of discord.py.utils.SnowflakeList.add"},
+    {"binary_search_seq_get", (PyCFunction)binary_search_seq_get, METH_VARARGS, "C like impl of a binary search on an integer sequence"},
+    {"binary_search_seq_has", (PyCFunction)binary_search_seq_has, METH_VARARGS, "C like impl of a binary search on an integer sequence"},
     {NULL, NULL, 0, NULL}
 };
 
