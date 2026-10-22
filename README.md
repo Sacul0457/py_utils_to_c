@@ -16,6 +16,7 @@ A C extension that implements common python utility (*utils*) functions/classes.
 | discord.utils.find   | 2.9 ms      | 2.9 ms: no change      |
 | SnowflakeList.get    | 6.7 ms      | 0.6 ms: 11.2x faster   |
 | SnowflakeList.has    | 6.6 ms      | 0.6 ms: 11.0x faster   |
+| min & max merged     | 4.2 ms      | 3.1 ms: 1.35x faster   |
 
 *There are initial benchmarks and overall performance I have seen over the course of creating/testing.* Will make a more reliable one and share it in the repo.
 

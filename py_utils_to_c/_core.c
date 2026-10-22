@@ -258,12 +258,165 @@ binary_search_seq_get(PyObject *self, PyObject *args)
 }
 
 
+static inline PyObject *
+_minmax_seq_no_key(PyObject *sequence)
+{
+    assert(sequence != NULL && PySequence_Check(sequence));
+
+    const Py_ssize_t seq_len = PySequence_Fast_GET_SIZE(sequence);
+    if (seq_len == 0) {
+        PyErr_SetString(PyExc_ValueError, "Empty sequence");
+        return NULL;
+    }
+
+    PyObject *min_o = PySequence_Fast_GET_ITEM(sequence, 0);
+    PyObject *max_o = min_o;
+
+    for (Py_ssize_t i = 1; i < seq_len; i++) {
+        PyObject *item  = PySequence_Fast_GET_ITEM(sequence, i);
+
+        int min_err = PyObject_RichCompareBool(item, min_o, Py_LT);
+
+        if (min_err == 1) {
+            min_o = item;
+        }
+        else if (min_err == -1) {
+            return NULL;
+        }
+
+        int max_err = PyObject_RichCompareBool(max_o, item, Py_LT);
+        if (max_err == 1) {
+            max_o = item;
+        }
+        else if (max_err == -1) {
+            return NULL;
+        }
+    }
+    
+    PyObject *tuple = PyTuple_New(2);
+    if (tuple == NULL) {
+        return NULL;
+    }
+
+    Py_INCREF(min_o);
+    Py_INCREF(max_o);
+    PyTuple_SET_ITEM(tuple, 0, min_o);
+    PyTuple_SET_ITEM(tuple, 1, max_o);
+    return tuple;
+}
+
+
+static inline PyObject *
+_minmax_iter_no_key(PyObject *iterable)
+{
+    assert(iterable != NULL);
+    PyObject *iter = PyObject_GetIter(iterable);
+    if (iter == NULL) {
+        return NULL;
+    }
+
+    PyObject *item = NULL;
+
+    int err = PyIter_NextItem(iter, &item);
+    if (err == 0 || err == -1) {
+        Py_DECREF(iter);
+        PyErr_SetString(PyExc_ValueError, "Empty iterable");
+        return NULL;
+    }
+
+    PyObject *min_o = item;
+    Py_INCREF(item); // 2 references
+    PyObject *max_o = item;
+
+    while (1) {
+        err = PyIter_NextItem(iter, &item);
+        if (err == 0) {
+            break;
+        }
+        else if (err == -1) {
+            goto error;
+        }
+
+        int min_err = PyObject_RichCompareBool(item, min_o, Py_LT);
+        if (min_err == -1) {
+            Py_DECREF(item);
+            goto error;
+        }
+
+        int max_err = PyObject_RichCompareBool(max_o, item, Py_LT);
+        if (max_err == -1) {
+            Py_DECREF(item);
+            goto error;
+        }
+
+        if (min_err == 0 && max_err == 0) {
+            Py_DECREF(item);
+        }
+        else if (min_err == 1 && max_err == 1) {
+            Py_INCREF(item);
+        }
+
+        if (min_err == 1) {
+            Py_DECREF(min_o);
+            min_o = item;
+        }
+        if(max_err == 1) {
+            Py_DECREF(max_o);
+            max_o = item;
+        }
+    }
+    
+    PyObject *tuple = PyTuple_New(2);
+    if (tuple == NULL) {
+        goto error;
+    }
+
+    Py_DECREF(iter);
+
+    PyTuple_SET_ITEM(tuple, 0, min_o);
+    PyTuple_SET_ITEM(tuple, 1, max_o);
+    return tuple;
+
+error:
+    Py_DECREF(min_o);
+    Py_DECREF(max_o);
+    Py_DECREF(iter);
+    return NULL;
+}
+
+
+static PyObject *
+minmax(PyObject *self, PyObject *args)
+{
+    const Py_ssize_t nargs = PyTuple_Size(args);
+    if (nargs != 1) {
+        PyErr_Format(PyExc_TypeError, "expected 1 argument, got %zd instead", nargs);
+        return NULL;
+    }
+
+    PyObject *iterable = PyTuple_GET_ITEM(args, 0);
+    if (!PySequence_Check(iterable) && !PySet_Check(iterable) && !PyDictViewSet_Check(iterable) && !PyIter_Check(iterable)) {
+        PyErr_Format(PyExc_TypeError, "Expected an iterable, got %.200s instead.", Py_TYPE(iterable)->tp_name);
+        return NULL;
+    }
+
+    if (PySequence_Check(iterable)) {
+        return _minmax_seq_no_key(iterable);
+    }
+    else {
+        return _minmax_iter_no_key(iterable);
+    }
+}
+
+
 static PyMethodDef methods[] = {
     {"dpy_utils_get", (PyCFunction)dpy_utils_get, METH_VARARGS | METH_KEYWORDS, "C like impl of discord.py.utils._get"},
     {"dpy_utils_find", (PyCFunction)dpy_utils_find, METH_VARARGS, "C like impl of discord.py.utils._find"},
 
     {"binary_search_seq_get", (PyCFunction)binary_search_seq_get, METH_VARARGS, "C like impl of a binary search on an integer sequence"},
     {"binary_search_seq_has", (PyCFunction)binary_search_seq_has, METH_VARARGS, "C like impl of a binary search on an integer sequence"},
+
+    {"minmax", (PyCFunction)minmax, METH_VARARGS, "Returns a tuple of the (min, max) of an iterable"},
     {NULL, NULL, 0, NULL}
 };
 
