@@ -6,14 +6,14 @@ if TYPE_CHECKING:
 
 def binary_search_seq_has(seq: Sequence[int], target: int) -> bool:
     """
-    Similar to discord.py's discord.utils.SnowflakeList.has
+    Implements a binary search on an integer sequence.
+    Returns `True` if the `target` is in the sequence, else `False`.
     """
-    print('wtf')
     pass
 
 
 def binary_search_seq_get(seq: Sequence[int], target: int) -> int | None:
     """
-    Similar to discord.py's discord.utils.SnowflakeList.get
+    Returns the position of the target, or `None` if the target is not in the sequence.
     """
     pass
